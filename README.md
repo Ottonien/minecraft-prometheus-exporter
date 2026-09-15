@@ -40,14 +40,41 @@ See [Health Checks](#health-checks) for more information on how to build your ow
 
 ## Installation & Configuration
 
+#### Configuration Hierarchy
+
+The Prometheus metrics exporter plugin supports multiple configuration sources for the HTTP endpoint (host/port). The configuration is applied in the following order of priority:
+
+1. **Environment Variables:**
+  - `MINECRAFT_PROMETHEUS_EXPORTER_HOST`
+  - `MINECRAFT_PROMETHEUS_EXPORTER_PORT`  
+    If these environment variables are set, their values will override all other settings.
+
+2. **System Properties:**
+  - `minecraft.prometheus.exporter.host`
+  - `minecraft.prometheus.exporter.port`  
+    If the environment variables are not provided, the plugin checks these system properties. They can be set when launching the JVM.
+
+3. **Configuration File:**  
+   If neither environment variables nor system properties are defined, the plugin falls back to the values in the configuration file.
+
+
 ### Plugin config
 
 The default configuration file will be created after the first use of the plugin.
 
 ```yml
 # Note that the HTTP server binds to localhost by default.
-# If your Prometheus runs on another host or inside a Kubernetes cluster
+# If your Prometheus runs on another host or inside a Kubernetes cluster,
 # set this to any reachable IP or 0.0.0.0 to listen on all interfaces.
+#
+# These settings can be overridden by environment variables or system properties.
+# Environment variables:
+#   - MINECRAFT_PROMETHEUS_EXPORTER_HOST: Overrides the host setting (e.g., 0.0.0.0)
+#   - MINECRAFT_PROMETHEUS_EXPORTER_PORT: Overrides the port setting (e.g., 9001)
+#
+# System properties (set during JVM startup):
+#   -Dminecraft.prometheus.exporter.host=0.0.0.0
+#   -Dminecraft.prometheus.exporter.port=9001
 host: localhost
 # The port can be changed in case it conflicts with any other application.
 port: 9940
@@ -132,9 +159,10 @@ The following metrics are exported by the plugin:
 | mc_tick_duration_min     | Min Tick Duration (ns, usually last 100 ticks)     | ❌             |
 | mc_tick_duration_max     | Max Tick Duration (ns, usually last 100 ticks)     | ❌             |
 
-### Player metrics (experimental!)
+### Player metrics
 
-:warning: **The following feature is against Prometheus best-practices and is not recommended for production servers!**
+> [!WARNING]
+> The following feature is against Prometheus best-practices and is not recommended for production servers.
 
 There is an option to export per-player statistics like the number of blocks mined, mobs killed, items used, etc.
 The amount of data stored in Prometheus can dramatically increase when this is enabled as individual time-series
@@ -161,7 +189,7 @@ This will enable the additional metrics.
 There's an additional sample [Grafana dashboard](https://raw.githubusercontent.com/sladkoff/minecraft-prometheus-exporter/master/dashboards/minecraft-players-dashboard.json)
 with player statistics enabled to get you started.
 
-You can find the full list [here](https://minecraft.fandom.com/wiki/Statistics#List_of_custom_statistic_names).
+You can find the full list [here](https://minecraft.wiki/w/Statistics#List_of_custom_statistic_names).
 Use the "Resource location" for the metrics label with removing the "minecraft:" part and converted to uppercase.
 This doesn't support all statistics in the list because they are provided by the upstream Spigot libraries.
 
